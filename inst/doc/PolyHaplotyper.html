@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>PolyHaplotyper vignette</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: #990073
+   }
+
+   pre .number {
+     color: #099;
+   }
+
+   pre .comment {
+     color: #998;
+     font-style: italic
+   }
+
+   pre .keyword {
+     color: #900;
+     font-weight: bold
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: #d14;
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h1>PolyHaplotyper vignette</h1>
+
+<h3>Roeland E. Voorrips, 2021-02-05</h3>
+
+<p>This vignette shows how to use the main functions provided in R package
+PolyHaplotyper and explains their output.</p>
+
+<p>The PolyHaplotyper package contains tools to derive phased haplotypes from
+unphased bi-allelic marker (SNP) data in collections of individuals of
+any even ploidy level: diploid, tetraploid, hexaploid. The haplotyping
+does not rely on linkage mapping and often is very fast (within a few seconds
+per haploblock).</p>
+
+<p>The markers must have been grouped into &ldquo;haploblocks&rdquo; that are so tightly
+linked that recombination may be assumed not to occur within the population.
+Typically such a haploblock would be the collection of all SNPs within a
+single contig. Since the number of possible haplotypes and hence the
+computation time increases dramatically with increasing number of markers
+it is best to split larger haploblocks to a maximum of 7-8 markers 
+(in tetraploids) or 5-6 markers (in hexaploids).</p>
+
+<p>The haplotyping is more reliable if one or more FS (Full-Sib) families, 
+with parents, are present, but will also proceed if no such FS families
+are available, or if the parents have missing data.</p>
+
+<h1>Input data</h1>
+
+<p>Load the package and demo data:</p>
+
+<pre><code class="r">rm(list=ls()) # clear existing data from memory
+library(PolyHaplotyper)
+data(PolyHaplotyper_demo) 
+# show the demo data:
+ls()
+</code></pre>
+
+<pre><code>## [1] &quot;demo_ped&quot;    &quot;demo_snpdos&quot;
+</code></pre>
+
+<p>Two inputs are necessary for the assignment of haplotypes: a matrix or 
+data.frame with the dosages of the markers, and a list indicating which markers 
+belong to each haploblock. 
+If FS families are present, these and their parents must also be specified:
+the FS family as a list with for each family a vector of names of the
+FS individuals, and the parents as a matrix with two columns and one row for
+each FS family.
+Further, in order to test if the assigned haplotype
+combinations match between parents and progeny, a pedigree must be specified
+as a matrix or data.frame. The pedigree is not needed or used for the 
+haplotyping itself, only (optionally) for a check afterwards. This pedigree can
+also contain other individuals than those in the specified FS families.</p>
+
+<p>Each individual should be represented by one column in the marker dosage
+data. If a pedigree is supplied there should also be one row for each individual
+in the pedigree, and the individual names in the dosage data and pedigree must 
+correspond (the pedigree may contain extra individuals not present in the dosage
+data). If that is the case the rest of this 
+section can be skipped. However, in the demo data several individuals are
+replicated in the dosage data and the pedigree, and the columns of the dosage
+data are named by sample codes rather than individual names. Also the
+haploblocks are defined by an extra column in the dosage data,
+rather than by a list.</p>
+
+<p>Since these are likely to be common issues we show here how to obtain input data
+in the correct formats, using some tools from the PolyHaplotyper package.</p>
+
+<h3>Haploblock definitions</h3>
+
+<p>The markers must be assigned to haploblocks which are stored as a list. In the 
+example the haploblock information is contained in an extra column &ldquo;contig&rdquo;
+in the marker dosage data:</p>
+
+<pre><code class="r">demo_snpdos[1:6, 1:8]
+</code></pre>
+
+<pre><code>##           marker contig s488 s649 s487 s639 s1_3 s1_4
+## 1 WagCmDlf_18464 ctg001    1    1    0    0    1    1
+## 2 WagCmDlf_12697 ctg001    1    1    1    1    0    0
+## 3 WagCmDlf_61726 ctg001    6    6    6    6    6    6
+## 4 WagCmDlf_26276 ctg001    1    1    1    1    0    0
+## 5 WagCmDlf_33716 ctg002    6    6    6    6    6    6
+## 6 WagCmDlf_19610 ctg002    5    5    6    6    6    6
+</code></pre>
+
+<p>We convert the haploblock information to list format:</p>
+
+<pre><code class="r">hblist &lt;- haploblock_df2list(demo_snpdos, mrkcol=1, hbcol=2)
+# number of markers in each haploblock:
+sapply(hblist, length)
+</code></pre>
+
+<pre><code>## ctg001 ctg002 ctg003 ctg004 ctg005 ctg006 ctg007 
+##      4      4      5      5      4      4      4
+</code></pre>
+
+<p>This small example has data for 7 haploblocks, each with 4 or 5 markers.</p>
+
+<h3>Marker data</h3>
+
+<p>The marker data must be supplied as a matrix or data.frame, with markers in
+rows and individuals in columns, with each cell containing the
+dosage (0 &hellip; ploidy) of the target marker allele. Our data are in data.frame 
+demo_snpdos, which, as we saw above, contains an extra column &ldquo;contig&rdquo; defining
+the haploblocks. We remove the contig column from demo_snpdos to get it in the 
+required format:</p>
+
+<pre><code class="r">demo_snpdos &lt;- demo_snpdos[, -2]
+demo_snpdos[1:6, 1:8]
+</code></pre>
+
+<pre><code>##           marker s488 s649 s487 s639 s1_3 s1_4 s1_5
+## 1 WagCmDlf_18464    1    1    0    0    1    1    1
+## 2 WagCmDlf_12697    1    1    1    1    0    0    0
+## 3 WagCmDlf_61726    6    6    6    6    6    6    6
+## 4 WagCmDlf_26276    1    1    1    1    0    0    0
+## 5 WagCmDlf_33716    6    6    6    6    6    6    6
+## 6 WagCmDlf_19610    5    5    6    6    6    6    6
+</code></pre>
+
+<p>The SNP dosages are all in the range 0&hellip;6, as these demo data are obtained 
+from a hexaploid crop (chrysanthemum). NA indicates an unknown dosage. </p>
+
+<h3>Pedigree</h3>
+
+<p>The pedigree must be a data.frame or matrix with in the first 3 columns the 
+names of the individual, its mother and its father. Parents
+may be missing (NA) but individuals may not, and there may not be more 
+than one line for the same individual.
+Additional columns may be present. In our case demo_ped has a fourth column 
+containing the sample nr:</p>
+
+<pre><code class="r">head(demo_ped)
+</code></pre>
+
+<pre><code>##   genotype mother father sample_nr
+## 1     2096     NA     NA      s629
+## 2     4431     NA     NA      s630
+## 3     6352   8420     NA      s631
+## 4     7688     NA     NA      s632
+## 5     7783   4431     NA      s201
+## 6     8309     NA     NA      s611
+</code></pre>
+
+<p>In this example several individuals are represented by more than one line, 
+because here the pedigree is also used to specify the (sometimes duplicated) 
+samples for each individual.<br/>
+In order to remove the duplicates from the pedigree we build 
+a list with the samples representing each replicated individual.</p>
+
+<pre><code class="r"># create a list of of replicates:
+tb &lt;- table(demo_ped$genotype)
+replist &lt;- list()
+for (dup in names(tb[tb&gt;1])) {
+  replist[[dup]] &lt;- demo_ped$sample_nr[demo_ped$genotype == dup]
+}
+</code></pre>
+
+<p>We remove the replicated individuals from the pedigree, keeping only the first
+row for each set of duplicates:</p>
+
+<pre><code class="r">dim(demo_ped)
+</code></pre>
+
+<pre><code>## [1] 661   4
+</code></pre>
+
+<pre><code class="r">for (dup in seq_along(replist)) {
+  dupsamp &lt;- as.character(replist[[dup]])[-1]
+  demo_ped &lt;- demo_ped[!(demo_ped$sample_nr %in% dupsamp),]
+}
+dim(demo_ped)
+</code></pre>
+
+<pre><code>## [1] 631   4
+</code></pre>
+
+<p>We see that 30 lines containing duplicates have been discarded.</p>
+
+<p>In demo_snpdos, the data.frame containing the SNP dosages, the column names are
+the sample names, and duplicated samples are still present. First we merge the
+dosage data of the replicates for each individual, again using replist (the list
+of replicates):</p>
+
+<pre><code class="r"># merge all the duplicated samples:
+dim(demo_snpdos)
+</code></pre>
+
+<pre><code>## [1]  30 662
+</code></pre>
+
+<pre><code class="r">demo_snpdos &lt;- mergeReplicates(mrkDosage=demo_snpdos, replist=replist,
+                               solveConflicts=TRUE)
+dim(demo_snpdos)
+</code></pre>
+
+<pre><code>## [1]  30 631
+</code></pre>
+
+<p>Function mergeReplicates has converted the demo_snpdos data.frame to a matrix,
+with the rownames taken from the column &ldquo;marker&rdquo;. For each individual present
+in multiple replicates only the first column name is retained, and the
+merged data are the consensus scores over all replicates. We see that 
+demo_snpdos now has 31 less columns: 1 was the removed &ldquo;marker&rdquo; column and
+30 were columns for the duplicated samples, corresponding to the 30
+duplicates removed from the pedigree.  </p>
+
+<p>Now we must change the sample numbers to the corresponding individual names:</p>
+
+<pre><code class="r">colnames(demo_snpdos) &lt;- 
+  demo_ped$genotype[match(colnames(demo_snpdos), demo_ped$sample_nr)]
+</code></pre>
+
+<h2>FS families</h2>
+
+<p>Finally we specify the four FS families and their parents (note that 
+individual 39287 is the father of two FS families):</p>
+
+<pre><code class="r">parents &lt;- cbind(c(36451, 41234, 9656, 32141),
+                 c(39287, 40360, 9541, 39287))
+parents
+</code></pre>
+
+<pre><code>##       [,1]  [,2]
+## [1,] 36451 39287
+## [2,] 41234 40360
+## [3,]  9656  9541
+## [4,] 32141 39287
+</code></pre>
+
+<pre><code class="r"># find the FS individuals by looking in the pedigree for their mother and father:
+FS &lt;- list()
+for (p in seq_len(nrow(parents))) {
+  FS[[p]] &lt;- 
+    demo_ped$genotype[!is.na(demo_ped$mother) &amp; demo_ped$mother==parents[p, 1] &amp;
+                      !is.na(demo_ped$father) &amp; demo_ped$father==parents[p, 2]]
+}
+# sizes of the FS families:
+sapply(FS, length)
+</code></pre>
+
+<pre><code>## [1] 405  53  76  37
+</code></pre>
+
+<h1>Haplotyping</h1>
+
+<p>Now we have the input data for the haplotyping in the correct formats. 
+To perform the haplotyping for all haploblocks in one go we use function
+inferHaplotypes:</p>
+
+<pre><code class="r">results &lt;- inferHaplotypes(mrkDosage=demo_snpdos, ploidy=6,
+                           haploblock=hblist,
+                           parents=parents, FS=FS)
+</code></pre>
+
+<p>We assume here that you run this command in a directory
+that does not contain file ahclist_6x.RData or ahccompletelist_6x.RData (more
+about these files in section Remarks).<br/>
+The first output line says that ahccompletelist cannot be loaded. Then you
+will get messages about sets of haplotype combinations that need to be 
+calculated. These would normally be available from the ahccompletelist file,
+but failing that they are calculated as needed. For this small example this 
+will take about 1 min. When this is done the actual haplotyping is
+done, and again progress messages are shown.  </p>
+
+<p>This function call returns a list with one item for each haploblock. 
+Each of these items is itself a list with several items. We&#39;ll take a look at 
+the results for the first haploblock which are in results[[1]].<br/>
+The actual haplotyping is in item hapdos (for &ldquo;haplotype dosages&rdquo;). 
+The composition of the haplotypes used in any of the individuals can be obtained
+via the usedhap function, and a listing of all possible haplotypes with the 
+allhap function.</p>
+
+<pre><code class="r">names(results[[1]])
+</code></pre>
+
+<pre><code>## [1] &quot;hapdos&quot;      &quot;mrkdids&quot;     &quot;markers&quot;     &quot;FSfit&quot;       &quot;FSmessages&quot; 
+## [6] &quot;FSpval&quot;      &quot;imputedGeno&quot; &quot;message&quot;
+</code></pre>
+
+<pre><code class="r"># show part of hapdos: the dosages of the haplotypes, for the first haploblock:
+results[[1]]$hapdos[, 1:8]
+</code></pre>
+
+<pre><code>##           9656 9541 39287 51202 51203 51204 51205 51206
+## ctg001_01    0    0     0     0     0     0     0     0
+## ctg001_03    4    5     4     3     4     6     5     4
+## ctg001_07    0    0     0     0     0     0     0     0
+## ctg001_08    1    1     1     1     0     0     1     0
+## ctg001_11    1    0     1     2     2     0     0     2
+</code></pre>
+
+<pre><code class="r"># show the composition of the used haplotypes:
+usedhap(results[[1]])
+</code></pre>
+
+<pre><code>##                1 3 7 8 11
+## WagCmDlf_18464 0 0 0 0  1
+## WagCmDlf_12697 0 0 1 1  0
+## WagCmDlf_61726 0 1 1 1  1
+## WagCmDlf_26276 0 0 0 1  0
+</code></pre>
+
+<pre><code class="r"># show the composition of all possible haplotypes:
+allhap(results[[1]])
+</code></pre>
+
+<pre><code>##                1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+## WagCmDlf_18464 0 0 0 0 0 0 0 0 1  1  1  1  1  1  1  1
+## WagCmDlf_12697 0 0 0 0 1 1 1 1 0  0  0  0  1  1  1  1
+## WagCmDlf_61726 0 0 1 1 0 0 1 1 0  0  1  1  0  0  1  1
+## WagCmDlf_26276 0 1 0 1 0 1 0 1 0  1  0  1  0  1  0  1
+</code></pre>
+
+<p>Haploblock 1 has 4 SNPs, so there are 16 (2<sup>4)</sup> possible haplotypes. These are
+all listed in the matrix returned by allhap, with a 0 indicating the non-counted
+(reference) SNP allele and a 1 the dosage-counted (alternative) allele. In
+haploblocks with more markers there will be many more columns, so 
+function usedhap is often more useful; this shows only the haplotypes that 
+are present in at least one individual.</p>
+
+<p>Matrix hapdos has the dosages of each haplotype in each individual, in the same
+layout as the marker dosages in demo_snpdos. Only the haplotypes that occur in
+the population are shown: in this case haplotypes 1, 3, 7, 8 and 11 (appended to 
+the haploblock name). For each individual the haplotype dosages sum to the 
+ploidy (6). Non-haplotyped individuals have NA dosages for all haplotypes.</p>
+
+<p>Another interesting item in the results is imputedGenotypes. For some FS
+individuals that have missing data in the marker genotypes it is still possible
+to infer their haplotype composition, and from this follow the complete marker 
+dosages. Below we see these imputed marker dosages compared with the original 
+dosages:</p>
+
+<pre><code class="r">results[[1]]$imputedGeno[, 1:8]
+</code></pre>
+
+<pre><code>##                51216 51230 51360 51389 51392 51394 51402 51460
+## WagCmDlf_18464     2     2     1     1     0     2     1     1
+## WagCmDlf_12697     1     1     1     0     0     0     0     1
+## WagCmDlf_61726     6     6     6     6     6     6     6     6
+## WagCmDlf_26276     1     1     1     0     0     0     0     1
+</code></pre>
+
+<pre><code class="r">demo_snpdos[hblist[[1]], colnames(results[[1]]$imputedGeno)[1:8]]
+</code></pre>
+
+<pre><code>##                51216 51230 51360 51389 51392 51394 51402 51460
+## WagCmDlf_18464     2     2     1     1     0     2     1     1
+## WagCmDlf_12697    NA    NA     1    NA    NA    NA    NA    NA
+## WagCmDlf_61726     6     6     6     6     6     6     6     6
+## WagCmDlf_26276     1     1    NA     0     0     0     0     1
+</code></pre>
+
+<p>The other items in the results for each haploblock are mostly intended for 
+generating overviews and statistics as shown in the next section. Refer to the
+manual (?inferHaplotypes) for an explanation of all items.</p>
+
+<h1>Overviews and statistics</h1>
+
+<h3>Overviews by FS family</h3>
+
+<p>The results of the haplotyping are now in a list named results. We first
+see how well the different FS families have been haplotyped, using function 
+overviewByFS:</p>
+
+<pre><code class="r">ovwFS &lt;- overviewByFS(haploblock=hblist, parents=parents, FS=FS,
+                      hapresults=results)
+# The full table is too wide to show;
+# for FS family 1 the results are:
+knitr::kable(ovwFS$ovw[, 1: 8], digits=c(0,0,0,0,3,0,0,0))
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">nmrk</th>
+<th align="right">nhap</th>
+<th align="right">parmrk1</th>
+<th align="right">fit1</th>
+<th align="right">P1</th>
+<th align="right">mrk1</th>
+<th align="right">imp1</th>
+<th align="right">hap1</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ctg001</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.321</td>
+<td align="right">380</td>
+<td align="right">10</td>
+<td align="right">390</td>
+</tr>
+<tr>
+<td align="left">ctg002</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.039</td>
+<td align="right">404</td>
+<td align="right">0</td>
+<td align="right">403</td>
+</tr>
+<tr>
+<td align="left">ctg003</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.347</td>
+<td align="right">344</td>
+<td align="right">0</td>
+<td align="right">343</td>
+</tr>
+<tr>
+<td align="left">ctg004</td>
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.221</td>
+<td align="right">383</td>
+<td align="right">6</td>
+<td align="right">387</td>
+</tr>
+<tr>
+<td align="left">ctg005</td>
+<td align="right">4</td>
+<td align="right">8</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.281</td>
+<td align="right">305</td>
+<td align="right">1</td>
+<td align="right">305</td>
+</tr>
+<tr>
+<td align="left">ctg006</td>
+<td align="right">4</td>
+<td align="right">6</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.051</td>
+<td align="right">308</td>
+<td align="right">15</td>
+<td align="right">323</td>
+</tr>
+<tr>
+<td align="left">ctg007</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">0.007</td>
+<td align="right">313</td>
+<td align="right">2</td>
+<td align="right">314</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r"># the final columns for the non-FS individuals and all individuals:
+knitr::kable(ovwFS$ovw[, c(1:2, 27:31)])
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">nmrk</th>
+<th align="right">nhap</th>
+<th align="right">mrkrest</th>
+<th align="right">haprest</th>
+<th align="right">mrkall</th>
+<th align="right">impall</th>
+<th align="right">hapall</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ctg001</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">48</td>
+<td align="right">48</td>
+<td align="right">595</td>
+<td align="right">11</td>
+<td align="right">605</td>
+</tr>
+<tr>
+<td align="left">ctg002</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">47</td>
+<td align="right">46</td>
+<td align="right">601</td>
+<td align="right">0</td>
+<td align="right">596</td>
+</tr>
+<tr>
+<td align="left">ctg003</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">41</td>
+<td align="right">41</td>
+<td align="right">544</td>
+<td align="right">0</td>
+<td align="right">536</td>
+</tr>
+<tr>
+<td align="left">ctg004</td>
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">45</td>
+<td align="right">41</td>
+<td align="right">577</td>
+<td align="right">6</td>
+<td align="right">567</td>
+</tr>
+<tr>
+<td align="left">ctg005</td>
+<td align="right">4</td>
+<td align="right">8</td>
+<td align="right">30</td>
+<td align="right">18</td>
+<td align="right">434</td>
+<td align="right">2</td>
+<td align="right">413</td>
+</tr>
+<tr>
+<td align="left">ctg006</td>
+<td align="right">4</td>
+<td align="right">6</td>
+<td align="right">10</td>
+<td align="right">8</td>
+<td align="right">392</td>
+<td align="right">15</td>
+<td align="right">393</td>
+</tr>
+<tr>
+<td align="left">ctg007</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">4</td>
+<td align="right">377</td>
+<td align="right">7</td>
+<td align="right">350</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r">#
+</code></pre>
+
+<p>overviewByFS returns a list with two items: ovw and messages. Both are matrices
+with one row per haploblock. Matrix ovw first gives the number of markers (nmrk)
+and of assigned haplotypes (nhap) for the haploblock over all individuals, and then
+for each FS family specific information: parmrk (0, 1 or 2: the number of 
+parents with complete marker dosages), fit (1 if a polysomic segregation could
+be fitted, else 0), P (the chi-squared P-value of the best fitting segregation
+of haplotypes, even if this segregation was rejected), mrk (the number of 
+FS individuals with complete marker dosages), imp (the number of FS individuals
+for which marker dosages were imputed) and hap (the number of 
+FS individuals with an assigned haplotype combination). After the last
+FS family we have two columns for &ldquo;rest&rdquo; (all individuals that are not
+in the FS families or their parents) and three columns for &ldquo;all&rdquo; (all
+individuals), again with mrk, imp and hap indicating the number of individuals
+with complete marker data, with imputed marker genotypes and with assigned 
+haplotypes. See the help file for further details (?overviewByFS). </p>
+
+<p>The second item in the OverviewByFS result, messages, is also a matrix with one 
+row per haploblock. It has first a message for the entire haploblock and
+then one message per FS family.</p>
+
+<h3>Pedigree check</h3>
+
+<p>Next we check each individual for a match between the possible gametes of
+its parents and its own haplotype composition, using function 
+pedigreeHapdosCheck:</p>
+
+<pre><code class="r">pedchk &lt;- pedigreeHapCheck(ped=demo_ped, mrkDosage=demo_snpdos,
+                           haploblock=hblist,
+                           hapresults=results)
+</code></pre>
+
+<pre><code>## checking haploblock 1 of 7: ctg001
+## checking haploblock 2 of 7: ctg002
+## checking haploblock 3 of 7: ctg003
+## checking haploblock 4 of 7: ctg004
+## checking haploblock 5 of 7: ctg005
+## checking haploblock 6 of 7: ctg006
+## checking haploblock 7 of 7: ctg007
+</code></pre>
+
+<pre><code class="r">#show part of ped_arr for haploblock 1:
+knitr::kable(pedchk$ped_arr[1:8,,1])
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="left">mrk</th>
+<th align="left">imp</th>
+<th align="left">hap</th>
+<th align="left">noDR</th>
+<th align="left">withDR</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">2096</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr>
+<td align="left">4431</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr>
+<td align="left">6352</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr>
+<td align="left">7688</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr>
+<td align="left">7783</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr>
+<td align="left">8309</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr>
+<td align="left">8393</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr>
+<td align="left">8420</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r">#show parents_arr for parents with more than 10 offspring and haploblock 1:
+knitr::kable(pedchk$parents_arr[pedchk$parents_arr[,3,1]&gt;10,,1])
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">par_mrk</th>
+<th align="right">par_hap</th>
+<th align="right">prog_tot</th>
+<th align="right">prog_mrk</th>
+<th align="right">prog_hap</th>
+<th align="right">nonDRmatch</th>
+<th align="right">DRmatch</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">32141</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">37</td>
+<td align="right">34</td>
+<td align="right">34</td>
+<td align="right">34</td>
+<td align="right">34</td>
+</tr>
+<tr>
+<td align="left">36451</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">405</td>
+<td align="right">380</td>
+<td align="right">390</td>
+<td align="right">389</td>
+<td align="right">390</td>
+</tr>
+<tr>
+<td align="left">39287</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">442</td>
+<td align="right">414</td>
+<td align="right">424</td>
+<td align="right">423</td>
+<td align="right">424</td>
+</tr>
+<tr>
+<td align="left">40360</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">56</td>
+<td align="right">55</td>
+<td align="right">55</td>
+<td align="right">55</td>
+<td align="right">55</td>
+</tr>
+<tr>
+<td align="left">41234</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">53</td>
+<td align="right">52</td>
+<td align="right">52</td>
+<td align="right">52</td>
+<td align="right">52</td>
+</tr>
+<tr>
+<td align="left">9541</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">81</td>
+<td align="right">78</td>
+<td align="right">78</td>
+<td align="right">77</td>
+<td align="right">78</td>
+</tr>
+<tr>
+<td align="left">9656</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">76</td>
+<td align="right">74</td>
+<td align="right">74</td>
+<td align="right">73</td>
+<td align="right">74</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r">#
+</code></pre>
+
+<p>pedigreeHapdosCheck returns a list with two items, the 3-dim arrays ped_arr 
+and parents_arr. In both cases the first dimension are individuals and the third
+dimension are haploblocks; the second dimension are the columns as shown above.</p>
+
+<p>Array ped_arr shows for each individual in the pedigree whether it
+has complete marker data (mrk), whether some of its marker dosages were 
+imputed (imp) and whether it has an assigned haplotype combination (hap), 
+and if its haplotype combination is compatible with that of its parents 
+assuming Double Reduction to be impossible (noDR) or possible (withDR); 
+NA indicates that the individual itself or both its parents have no 
+haplotypes assigned.<br/>
+Array parents_arr gives information for each individual that is a parent,
+whether it has complete marker data (par_mrk) and an assigned haplotype 
+combination (par_hap), how many of its progeny have complete marker data (mrk)
+and haplotype data (hap), and how many of its progeny are compatible 
+with it, assuming Double Reduction to be impossible(nonDRmatch) or 
+possible (DRmatch). For details see the help (?pedigreeHapdosCheck).</p>
+
+<h3>Summary statistics</h3>
+
+<p>The results of overviewByFS and pedigreeHapdosCheck can be summarized using
+function calcStatistics:</p>
+
+<pre><code class="r">cst &lt;- calcStatistics(pedchk=pedchk, ovwFS=ovwFS)
+knitr::kable(cst$pedstats)
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left">haploblock</th>
+<th align="right">mrk</th>
+<th align="right">imp</th>
+<th align="right">hap</th>
+<th align="right">match.NA</th>
+<th align="right">noDR.TRUE</th>
+<th align="right">noDR.FALSE</th>
+<th align="right">withDR.TRUE</th>
+<th align="right">withDR.FALSE</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ctg001</td>
+<td align="right">595</td>
+<td align="right">11</td>
+<td align="right">605</td>
+<td align="right">64</td>
+<td align="right">565</td>
+<td align="right">2</td>
+<td align="right">567</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="left">ctg002</td>
+<td align="right">601</td>
+<td align="right">0</td>
+<td align="right">596</td>
+<td align="right">70</td>
+<td align="right">561</td>
+<td align="right">0</td>
+<td align="right">561</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="left">ctg003</td>
+<td align="right">544</td>
+<td align="right">0</td>
+<td align="right">536</td>
+<td align="right">125</td>
+<td align="right">499</td>
+<td align="right">7</td>
+<td align="right">505</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">ctg004</td>
+<td align="right">577</td>
+<td align="right">6</td>
+<td align="right">567</td>
+<td align="right">98</td>
+<td align="right">524</td>
+<td align="right">9</td>
+<td align="right">533</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="left">ctg005</td>
+<td align="right">434</td>
+<td align="right">2</td>
+<td align="right">413</td>
+<td align="right">239</td>
+<td align="right">389</td>
+<td align="right">3</td>
+<td align="right">392</td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td align="left">ctg006</td>
+<td align="right">392</td>
+<td align="right">15</td>
+<td align="right">393</td>
+<td align="right">251</td>
+<td align="right">379</td>
+<td align="right">1</td>
+<td align="right">379</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">ctg007</td>
+<td align="right">377</td>
+<td align="right">7</td>
+<td align="right">350</td>
+<td align="right">287</td>
+<td align="right">343</td>
+<td align="right">1</td>
+<td align="right">344</td>
+<td align="right">0</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r">knitr::kable(cst$FSstats, digits=c(0,0,0,2,2,2))
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left">FSfam</th>
+<th align="right">bothparmrk</th>
+<th align="right">FSFit</th>
+<th align="right">mrk</th>
+<th align="right">imp</th>
+<th align="right">hap</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">1</td>
+<td align="right">7</td>
+<td align="right">7</td>
+<td align="right">348.14</td>
+<td align="right">4.86</td>
+<td align="right">352.14</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="right">7</td>
+<td align="right">6</td>
+<td align="right">31.57</td>
+<td align="right">0.00</td>
+<td align="right">27.29</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="right">6</td>
+<td align="right">6</td>
+<td align="right">58.43</td>
+<td align="right">0.29</td>
+<td align="right">55.00</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="right">6</td>
+<td align="right">6</td>
+<td align="right">25.43</td>
+<td align="right">0.71</td>
+<td align="right">24.14</td>
+</tr>
+<tr>
+<td align="left">rest</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">32.57</td>
+<td align="right">0.00</td>
+<td align="right">29.43</td>
+</tr>
+<tr>
+<td align="left">all</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">502.86</td>
+<td align="right">5.86</td>
+<td align="right">494.29</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r">#
+</code></pre>
+
+<p>calcStatistics returns a list with two matrices. Matrix pedstats gives per
+haploblock the totals over all individuals from pedchk$ped_arr.
+The total of columns match.NA + noDR.TRUE + noDR.FALSE and 
+of match.NA + withDR.TRUE + withDR.FALSE is the total number of individuals.
+Matrix FSstats gives the totals or means per FS family over all haploblocks 
+from ovwFS$ovw. For details see the help (?calcStatistics).</p>
+
+<h3>Number of markers vs number of haplotypes</h3>
+
+<p>Finally we can get a table of the number of haplotypes vs the number of markers
+per haploblock:</p>
+
+<pre><code class="r">calcMrkHaptable(ovwFS=ovwFS)
+</code></pre>
+
+<pre><code>##    haplotypes
+## mrk 5 6 7 8
+##   4 3 1 0 1
+##   5 0 1 1 0
+</code></pre>
+
+<p>In this example there are 5 haploblocks with 4 markers and 2 haploblocks with 5
+markers, so the table contains two rows.</p>
+
+<h3>Segregation in one FS, one haploblock</h3>
+
+<p>With function showOneFS it is possible to study the segregation of one
+haploblock in one FS family. Both the segregation of markers and of 
+haplotypes is shown.</p>
+
+<pre><code class="r"># show the segregation for FS number 1 (FSnr=1) and 
+# haploblock number 1 (hbresults=results[[1]])
+showOneFS(FSnr=1, hbresults=results[[1]], mrkDosage=demo_snpdos, 
+          FS=FS, parents=parents)
+</code></pre>
+
+<pre><code>## $mrkdat
+##                (36451) (39287) 43 93 386 436 729 779 1072 &lt;NA&gt;
+## frq                386     436 39 65 103 104  47  31    1   15
+## WagCmDlf_18464       1       1  0  0   1   1   2   2    3   NA
+## WagCmDlf_12697       0       1  0  1   0   1   0   1    0   NA
+## WagCmDlf_61726       6       6  6  6   6   6   6   6    6   NA
+## WagCmDlf_26276       0       1  0  1   0   1   0   1    0   NA
+## 
+## $hapdat
+##           (36451) (39287) 43 93 386 436 729 779 1072 &lt;NA&gt;
+## frq           386     436 39 65 103 104  47  31    1   15
+## ctg001_03       5       4  6  5   5   4   4   3    3   NA
+## ctg001_08       0       1  0  1   0   1   0   1    0   NA
+## ctg001_11       1       1  0  0   1   1   2   2    3   NA
+## 
+## $usedhap
+##                3 8 11
+## WagCmDlf_18464 0 0  1
+## WagCmDlf_12697 0 1  0
+## WagCmDlf_61726 1 1  1
+## WagCmDlf_26276 0 1  0
+</code></pre>
+
+<p>The result of showOneFS is a list with 3 elements. The first two are matrices
+that show the segregation in terms of marker dosages and haplotype dosages, 
+respectively. The row names of these matrices are first &ldquo;frq&rdquo; (frequency,
+the number of FS individuals with each genotype) followed by the marker names
+or the haplotype names. The columns of both matrices are a bit  complex. The
+first two columns represent the parents. Their column names are the names of 
+the parents in (brackets), and their first row does not contain a frequency
+but the marker dosage IDs of the parents. All following columns have as names
+one of the marker dosage IDs occurring in the FS, and the first row has the 
+number of FS individuals with that marker dosage ID. (A marker dosage ID or
+mrkdid is a number encoding the dosages of all the SNP markers in an 
+individual). In all columns, the next rows contain the dosages of the markers 
+or the haplotypes.
+The third element of the result is a matrix listing the composition of the
+haplotypes present, in terms of their marker alleles (with a 0 being the
+reference allele and a 1 the alternative allele).</p>
+
+<h1>Remarks</h1>
+
+<p>PolyHaplotyper uses one or two pre-calculated lists, ahclist and 
+ahccompletelist, that contain
+all possible haplotype combinations that result in the same marker
+dosage combination. These may take a lot of time to calculate and are completely
+reusable between haploblocks and runs of inferHaplotypes.</p>
+
+<p>The ahclist and ahccompletelist lists are stored 
+as files with names like ahclist_6x.RData and ahccompletelist_6x.RData (where
+6x indicates the ploidy). These files must be either in the working
+directory, or their location must be specified in the call to inferHaplotypes 
+by setting parameter ahcdir. If these files are not present the haplotyping
+will proceed normally, but the computation of the ahc data will add very
+much to the processing time; a message to that effect will be shown.</p>
+
+<p>An ahccompletelist stores the possible haplotype
+combinations for ALL marker dosage combinations, for haploblocks from 1 marker
+up to some maximum. These lists are pre-calculated: they
+are only used but not changed by inferHaplotypes. They speed up the 
+calculations enormously, but it takes considerable time to calculate them
+and above 7 or 8 markers (in tetraploids) or 6 markers (in hexaploids) they
+become too large. They are useful if haplotyping is a recurrent activity.</p>
+
+<p>An ahclist stores the haplotype combinations for any marker dosage
+combination that is encountered in the data, and that cannot be found in the
+ahccompletelist (because that list is not available, or is limited to haploblocks
+with fewer markers). These lists are created or extended &ldquo;on the fly&rdquo; and 
+then (re-)saved to file.</p>
+
+<p>The package does not include ahclist or ahccompletelist files because of their size. 
+The demo in this vignette doesn&#39;t need them as the number of haploblocks 
+is small and the calculation of the ahclist data requires little time. 
+After running the vignette example you will find file ahclist_6x.RData in the
+working directory.</p>
+
+<p>The ahccompletelist files can be computed using function build_ahccompletelist:</p>
+
+<pre><code class="r">build_ahccompletelist(ploidy=6, maxmrk=5, overwrite=FALSE)
+</code></pre>
+
+<p>Alternatively the following ahccompletelists are (currently) available upon 
+request from <a href="mailto:roeland.voorrips@wur.nl">roeland.voorrips@wur.nl</a>:<br/>
+ploidy 4, up to 7 markers: ahccompletelist_4x.RData, 41 MB<br/>
+ploidy 4, up to 8 markers: ahccompletelist_4x.RData, 769 MB<br/>
+ploidy 6, up to 5 markers: ahccompletelist_6x.RData, 9 MB<br/>
+ploidy 6, up to 6 markers: ahccompletelist_6x.RData, 515 MB</p>
+
+<p>For those interested in some background on these lists:</p>
+
+<p>An ahclist for a given ploidy has one item for each number of markers per 
+haploblock (nmrk).<br/>
+Such an item is itself a list, with one item for each marker dosage combination 
+for which the set of haplotype combinations has been calculated. The name of 
+such an item is the mrkdid (marker dosage ID) and the item contains a matrix
+with (ploidy) rows and one column per possible haplotype combination, 
+with the numbers of the haplotypes that are present (e.g. a column with numbers 
+1, 17, 17, 24 means that haplotypes 1 and 24 are present in simplex and 
+haplotype 17 is present in duplex, in this tetraploid combination).
+The order of the mrkdid items in the sublist for a certain number of markers is 
+the order in which they are calculated, and they are accessed by 
+their name (mrkdid).</p>
+
+<p>An ahccompletelist is very similar, except that for each number of markers
+it contains all possible marker dosage combinations (mrkdids) in a fixed
+order. They are accessed by their position and not by their name (mrkdid).
+Therefore they don&#39;t have or need the mrkdids as names.</p>
+
+<p>The following tables show the total number of
+haplotype combinations and the total number of combinations of marker
+dosages for a range of marker numbers (in rows) and ploidy 
+levels (in columns):</p>
+
+<p>Table: haplotype combinations</p>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+<th align="right">7</th>
+<th align="right">8</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">3</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">7</td>
+<td align="right">8.000000e+00</td>
+<td align="right">9.000000e+00</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="right">4</td>
+<td align="right">10</td>
+<td align="right">20</td>
+<td align="right">35</td>
+<td align="right">56</td>
+<td align="right">84</td>
+<td align="right">1.200000e+02</td>
+<td align="right">1.650000e+02</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="right">8</td>
+<td align="right">36</td>
+<td align="right">120</td>
+<td align="right">330</td>
+<td align="right">792</td>
+<td align="right">1716</td>
+<td align="right">3.432000e+03</td>
+<td align="right">6.435000e+03</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="right">16</td>
+<td align="right">136</td>
+<td align="right">816</td>
+<td align="right">3876</td>
+<td align="right">15504</td>
+<td align="right">54264</td>
+<td align="right">1.705440e+05</td>
+<td align="right">4.903140e+05</td>
+</tr>
+<tr>
+<td align="left">5</td>
+<td align="right">32</td>
+<td align="right">528</td>
+<td align="right">5984</td>
+<td align="right">52360</td>
+<td align="right">376992</td>
+<td align="right">2324784</td>
+<td align="right">1.262026e+07</td>
+<td align="right">6.152375e+07</td>
+</tr>
+<tr>
+<td align="left">6</td>
+<td align="right">64</td>
+<td align="right">2080</td>
+<td align="right">45760</td>
+<td align="right">766480</td>
+<td align="right">10424128</td>
+<td align="right">119877472</td>
+<td align="right">1.198775e+09</td>
+<td align="right">1.063913e+10</td>
+</tr>
+<tr>
+<td align="left">7</td>
+<td align="right">128</td>
+<td align="right">8256</td>
+<td align="right">357760</td>
+<td align="right">11716640</td>
+<td align="right">309319296</td>
+<td align="right">6856577728</td>
+<td align="right">1.312545e+11</td>
+<td align="right">2.214919e+12</td>
+</tr>
+<tr>
+<td align="left">8</td>
+<td align="right">256</td>
+<td align="right">32896</td>
+<td align="right">2829056</td>
+<td align="right">183181376</td>
+<td align="right">9525431552</td>
+<td align="right">414356272512</td>
+<td align="right">1.550876e+13</td>
+<td align="right">5.098506e+14</td>
+</tr>
+</tbody></table>
+
+<p>Table: combinations of marker dosages</p>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+<th align="right">7</th>
+<th align="right">8</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">3</td>
+<td align="right">4</td>
+<td align="right">5</td>
+<td align="right">6</td>
+<td align="right">7</td>
+<td align="right">8</td>
+<td align="right">9</td>
+</tr>
+<tr>
+<td align="left">2</td>
+<td align="right">4</td>
+<td align="right">9</td>
+<td align="right">16</td>
+<td align="right">25</td>
+<td align="right">36</td>
+<td align="right">49</td>
+<td align="right">64</td>
+<td align="right">81</td>
+</tr>
+<tr>
+<td align="left">3</td>
+<td align="right">8</td>
+<td align="right">27</td>
+<td align="right">64</td>
+<td align="right">125</td>
+<td align="right">216</td>
+<td align="right">343</td>
+<td align="right">512</td>
+<td align="right">729</td>
+</tr>
+<tr>
+<td align="left">4</td>
+<td align="right">16</td>
+<td align="right">81</td>
+<td align="right">256</td>
+<td align="right">625</td>
+<td align="right">1296</td>
+<td align="right">2401</td>
+<td align="right">4096</td>
+<td align="right">6561</td>
+</tr>
+<tr>
+<td align="left">5</td>
+<td align="right">32</td>
+<td align="right">243</td>
+<td align="right">1024</td>
+<td align="right">3125</td>
+<td align="right">7776</td>
+<td align="right">16807</td>
+<td align="right">32768</td>
+<td align="right">59049</td>
+</tr>
+<tr>
+<td align="left">6</td>
+<td align="right">64</td>
+<td align="right">729</td>
+<td align="right">4096</td>
+<td align="right">15625</td>
+<td align="right">46656</td>
+<td align="right">117649</td>
+<td align="right">262144</td>
+<td align="right">531441</td>
+</tr>
+<tr>
+<td align="left">7</td>
+<td align="right">128</td>
+<td align="right">2187</td>
+<td align="right">16384</td>
+<td align="right">78125</td>
+<td align="right">279936</td>
+<td align="right">823543</td>
+<td align="right">2097152</td>
+<td align="right">4782969</td>
+</tr>
+<tr>
+<td align="left">8</td>
+<td align="right">256</td>
+<td align="right">6561</td>
+<td align="right">65536</td>
+<td align="right">390625</td>
+<td align="right">1679616</td>
+<td align="right">5764801</td>
+<td align="right">16777216</td>
+<td align="right">43046721</td>
+</tr>
+</tbody></table>
+
+</body>
+
+</html>
