@@ -1,12 +1,12 @@
-62d703e5720f9150073dc0705adfc10b *DESCRIPTION
-2b7c79483a80d3c7daab1c14f8dc17e9 *NAMESPACE
-4ad00b2e3718d26600bbf4135769bcfd *R/PolyHaplotyper.R
-93554b4195741978302d7c22b3cac3e9 *build/vignette.rds
+db40634fe1c55e6139bfde15f62a4e75 *DESCRIPTION
+35dc73b28dfc5063fe51660270a4632d *NAMESPACE
+4bc65a193825864678151849dde328c1 *R/PolyHaplotyper.R
+db3849ae8937a37dd332da872f9613b8 *build/vignette.rds
 38fb1eb9ca8dc0add2f0fb6aa233e3d7 *data/PolyHaplotyper_demo.RData
 54c8c0b7197f443b6a5e80073f716e07 *data/PolyHaplotyper_small.RData
 c93f041b8b33c694550853a00e1d0b0d *inst/doc/PolyHaplotyper.R
 974301f96e5853106921cfbbb0d93360 *inst/doc/PolyHaplotyper.Rmd
-113b9a64d23e79f8023deeba8e1189c6 *inst/doc/PolyHaplotyper.html
+484a835c660217c2ab38d22a4a72954b *inst/doc/PolyHaplotyper.html
 bcc91cdedf56977fd3a98f80fcd5d68d *man/allHaplotypes.Rd
 83af0944fc3c58730cee75983bb92042 *man/allhap.Rd
 f7331615f0a1f06ef52552f5785da5fa *man/build_ahccompletelist.Rd
@@ -24,7 +24,7 @@ c0e6a07158eb039b9333674c6d20676c *man/hapcomb2hapdos.Rd
 eff4bf55ccd0e05fda0994af1344aab7 *man/hapdos2hapcomb.Rd
 374bed22edcb9a5eeadfbfa81aa21a3f *man/hapdos2mrkdos.Rd
 dc1f15f27370fbf3c6b486bf4b9f7a77 *man/haploblock_df2list.Rd
-14cbfb0451c31332a6fc75723216544c *man/inferHaplotypes.Rd
+5cbec16e15983783763ac66aa96f1c3f *man/inferHaplotypes.Rd
 7a3f9c7e59aeb1a063c67ccb25c2f6da *man/make.Happyinf.input.Rd
 78bd0305d333fa28b1dc3060072e9210 *man/make.SATlotyper.input.Rd
 6deed8aa0fe295b4f9b2e1c9241b1027 *man/make.ShesisPlus.input.Rd

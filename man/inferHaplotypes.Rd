@@ -42,9 +42,9 @@ minfrac[1] of all individuals; in the final stage for the "other"
 individuals (those that do not belong to the FS or its parents) this fraction
 is lowered to minfrac[2]; see also inferHaps_noFS}
 
-\item{errfrac}{the assumed fraction marker genotypes with an error (over all
-markers in the haploblock). The errors are assumed to be uniformly distributed
-over all except the original marker dosage combinations (mrkdids)}
+\item{errfrac}{default 0.025. The assumed fraction marker genotypes with an error
+(over all markers in the haploblock). The errors are assumed to be uniformly
+distributed over all except the original marker dosage combinations (mrkdids)}
 
 \item{DRrate}{default 0.025. The rate of double reduction per meiosis (NOT
 per allele!); e.g. with a DRrate of 0.04, a tetraploid parent with
@@ -66,9 +66,9 @@ This may take a long time if many such combinations need to be checked.
 This parameter sets a limit to the number of allowed combinations per
 haploblock; default 150000 takes about 45 min.}
 
-\item{minPseg}{The minimum P-value of a chisquared test for segregation in
-FS families. The best solution for an FS family is selected based on a
-combination of P-value and number of required haplotypes, among all
+\item{minPseg}{default 1e-8. The minimum P-value of a chisquared test for
+segregation in FS families. The best solution for an FS family is selected
+based on a combination of P-value and number of required haplotypes, among all
 candidate solutions with a P-value of at least minPseg. If no such solution
 is found the FS and its parents are treated as unrelated material}
 

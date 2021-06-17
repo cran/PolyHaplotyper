@@ -2041,6 +2041,36 @@ solveOneFS <- function(mrkdids, ihl, FS, P, knownPhac, triedPhacs, maxparcombs,
     list(parcombstats=parcombstats, didNhapcombLst=didNhapcombLst)
   } #calcParcombstats in solveOneFS
 
+  findPthreshold <- function(minP, Pvalues) {
+    # this function sets a minimum for the P-value to accept a parental hac
+    # combination. The aim is to keep only a limited set of possibilities,
+    # if there are many above minP (default 1e-8)
+    # minP: the hard minimum threshold
+    # Pvalues: all P values from which to select
+    # version:
+    # "simple": set threshold to max(P)/1000 if that is above minP, else to minP
+    #           (this is the method used from version 1.0.1)
+    # "orig": as in version 1.0.0, i.e. apply a threshold of 1e-4 if there are
+    #        solutions above this, and else minP;
+    # "gap": find the largest gap between the log10(Pvalues); if that gap is >=2
+    #        select only the P-values above it (and above minP)
+    version <- "simple" # for version 1.0.1; other options are orig and gap
+    if (version=="simple") {
+      return(max(minP, max(Pvalues/1000)))
+    } else  if (version=="orig") {
+      if (max(Pvalues) > 1e-4) return(1e-4) else return(minP)
+    } else if (version=="gap") {
+      if (length(Pvalues) == 1) return(minP)
+      Pvalues <- sort(Pvalues, decreasing=TRUE)
+      gaps <- diff(log10(Pvalues))
+      g <- which.max(gaps)
+      if (g<2 || gaps[g] < 2) return(minP) else return(max(minP, Pvalues[g]))
+    } else {
+      # default
+      return(minP)
+    }
+  } # findPthreshold
+
   selFromParcombok <- function(parcombok, allhap, minPseg) {
     # parcombok: matrix with 2 columns (1 for each parent) and one row
     #      per parental combination; numbers index the columns of the
@@ -2075,13 +2105,12 @@ solveOneFS <- function(mrkdids, ihl, FS, P, knownPhac, triedPhacs, maxparcombs,
     # we reject all that have P <= minPseg and
     # from the remaining we select the one with the "best" combination
     # of nhap and P
-    firstP <- max(minPseg, 1e-4)
-    if (any(!is.na(parcombstats$P) & parcombstats$P >= firstP)) {
-      #if possible we limit our selection to those with P >= 1e-4:
-      sel <- which(!is.na(parcombstats$P) & parcombstats$P >= firstP)
+    Pvalues <- parcombstats$P[!is.na(parcombstats$P)]
+    if (length(Pvalues) == 0) {
+      sel <- integer(0)
     } else {
-      #else we select all with P >= minPseg:
-      sel <- which(!is.na(parcombstats$P) & parcombstats$P >= minPseg)
+      Pthreshold <- findPthreshold(minP=minPseg, Pvalues=Pvalues)
+      sel <- which(!is.na(parcombstats$P) & parcombstats$P >= Pthreshold)
     }
     list(sel=sel, parcombstats=parcombstats, didNhapcombLst=didNhapcombLst)
   } # selFromParcombok within solveOneFS
@@ -2596,6 +2625,372 @@ hapOneBlock <- function(mrkDosage, hbname, ahcinfo, parents, FS,
     stats
   } # function newSolstats
 
+  resolveGroupConflicts <- function(FSgroup, FSgrpstruct, FSgrouping, FSdata,
+                                    parents, solstats, cycle, ihl) {
+    #This function considers all FS solutions for all FS in a group of
+    #linked FS families and selects the best overall solution: a combination
+    #of parental hapcombs that explains the largest number of FS progeny; and
+    #FS and parent(s) that conflict with the rest of the group are removed
+    #from the group (and will be considered as unrelated material later)
+    #output: list with (possibly) modified FSgrpstruct, allparcombs, solstats
+    FSconflicts <- TRUE
+    while (FSconflicts) {
+      FSconflicts <- FALSE
+      FSgrpstruct <-
+        getFSgroupStructure(FSgrouping=FSgrouping, grp=grp, FSdata=FSdata,
+                            pcos=solstats[[cycle]]$pcos, parents=parents)
+      # It is possible that no FSs are left in a group, if none of the FSs
+      # has at least one solution. In that case we skip the rest of the loop
+      # and leave FSconflicts FALSE to exit the loop.
+      if (length(FSgrpstruct$availFSs) > 1) {
+        # find and resolve conflicts between FSs:
+        # where both FS have one or more solutions but the shared parent
+        # cannot have the same hac.
+        # For each parental solution, see for how many total FS progeny (over
+        # multiple FSs) it is acceptable.
+        # Discard the one with the smallest total FS progeny;
+        # check for which FSs this was the only solution for that parent and
+        # remove these FSs from further consideration (i.e. treat as unrelated).
+        # Continue until no further conflicts: all remaining parental solutions
+        # fit all remaining FSs where they are a parent
+        miscount <- vector("list", length(FSgrpstruct$availparents)) # for each
+        #           availparent a vector with for each hac the nr of FS progeny
+        #           it does not match
+        names(miscount) <- FSgrpstruct$availparents
+        for (prow in seq_along(FSgrpstruct$availparents)) {
+          # prow indicates the parent, row number in the FSgrpstruct$FSmatlist's
+          # (and in allparcombs, but that doesn't exist at this stage)
+          miscount[[prow]] <- rep(0, length(FSgrpstruct$parhapcombs[[prow]]))
+          for (cix in seq_along(FSgrpstruct$parhapcombs[[prow]])) {
+            # cix is the index of the current parental ahccol in
+            # FSgrpstruct$parhapcombs[[prow]]
+            phcmb <- FSgrpstruct$parhapcombs[[prow]][cix]
+            # phcmb is the actual parental ahccol indicated by cix
+            # now, for all FSs in grp:
+            for (avfs in seq_along(FSgrpstruct$availFSs)) {
+              fs <- FSgrpstruct$availFSs[avfs]
+              if (FSgrpstruct$availparents[prow] %in% parents[fs,]) {
+                # if the prow parent is a parent of this FS ...
+                if(!(phcmb %in% FSgrpstruct$FSmatlist[[avfs]][prow,])) {
+                  # ... and this ahccol for this parent is not in one of the
+                  #     solutions of this FS, then this parental solution
+                  #     "misses" all GENOTYPED indivs of the entire FS
+                  miscount[[prow]][cix] <-
+                    miscount[[prow]][cix] + FSdata[[fs]]$mrksize
+                }
+              }
+            } # for avfs
+          } # for cix
+        } # for prow
+        #now for each parental combination we know how many fully genotyped
+        # FS progeny it misses
+        #find the (any) maximum:
+        maxmissedprogcount <- sapply(miscount, max)
+        FSconflicts <- any(maxmissedprogcount > 0)
+        if (!FSconflicts) break #ends the "while FSconflicts" loop
+        maxprow <- which.max(maxmissedprogcount) #the parent with the most
+        #                                missed progeny in its worst solution
+        maxcix <- which.max(miscount[[maxprow]]) #the index to the solution itself
+        maxphcmb <- FSgrpstruct$parhapcombs[[maxprow]][maxcix] #the ahccol
+        #now we find in which availFSs this maxhcmb occurs for this parent;
+        #the corresponding column is deleted from the FSmatlist matrices,
+        #and for each FS in which this ahccol is a solution:
+        #the index to the corresponding row in FSdata[[fs]]$parcombok
+        #(and to the corresponding $Pseg) is deleted from
+        #solstats[[cycle]]$pcos[[fs]]
+        for (avfs in seq_along(FSgrpstruct$availFSs)) {
+          cix <- which(FSgrpstruct$FSmatlist[[avfs]][maxprow,] == maxphcmb)
+          if (length(cix) > 0) {
+            # the maxprow parent occurs in this FS and the hapcomb to be deleted
+            # is one of its possibilities in this FS
+            fs <- FSgrpstruct$availFSs[avfs]
+            solstats[[cycle]]$pcos[[fs]] <-
+              solstats[[cycle]]$pcos[[fs]][-cix]
+          }
+        } # for avfs
+      } else if(length(FSgrpstruct$availFSs) == 1) {
+        # exactly 1 FS in this group, just apply its best solution:
+        fs <- FSgrpstruct$availFSs
+        solstats[[cycle]]$pcos[[fs]] <- which.max(FSdata[[fs]]$Pseg)
+      } else {
+        # length(FSgrpstruct$availFSs) == 0, no FS's left in this group
+        # nothing to do ?
+      }
+    } # while FSconflicts
+    # If there are parents with multiple solutions left (these fit all
+    # remaining FSs of which they are parents, so these FSs also have
+    # multiple solutions):
+    # For each combination of remaining parental solutions over all
+    # remaining parents calculate an overall P-value (by multiplying the
+    # P-values of all remaining FSs for that combination).
+    # (TODO: perhaps use selcrit instead of Pval? Then selcrit must also
+    #        be saved in FSresults)
+    # If any single one of these parental haplotype combinations has the
+    # largest P-value, select that and apply it to all these remaining FSs;
+    # else treat all remaining FSs as unrelated.
+
+    FSgrpstruct <- getFSgroupStructure(FSgrouping, grp, FSdata,
+                                       solstats[[cycle]]$pcos, parents)
+    allparcombs <- getAllParCombs(parents, FSdata, FSgrpstruct)
+    combinedPval <- allparcombs$Pval
+    allparcombs <- allparcombs$allparcombs
+
+    # debug check:
+    if ((length(FSgrpstruct$availFSs) == 0 && nrow(allparcombs) > 0) ||
+        (length(FSgrpstruct$availFSs) > 0 && nrow(allparcombs) == 0))
+      stop("mismatch availFSs and allparcombs")
+    # All FSs in a group that have 0 rows in FSdata[[fs]]$parcombok are not
+    # among the availFSs anymore. This may be because there was no solution
+    # in the first place (conflict parent/offspring, missing data parents,
+    # too many missing data offspring, skipped because of too many parcombs)
+    # or because the solutions all conflicted with other FSs in the group.
+    # These FSs will not be solved but their FSdata$messages must be
+    # filled (if that hasn't been done yet).
+    # If there are FSs left over (still available), allparcombs has 1 valid
+    # combination per row with ahccols of all available parents
+    #
+    # first treat all FSs in grp that are not in availFSs:
+    # (including the case that there are no availFSs left over)
+    for (fs in FSgrouping$FSgroups[[grp]]) {
+      if (!(fs %in% FSgrpstruct$availFSs)) {
+        #check for debugging:
+        #if (nrow(FSsof[[fs]]$parcombok) > 0)
+        if (length(solstats[[cycle]]$pcos[[fs]]) > 0)
+          stop("error: length(pcos) should be 0")
+      }
+    }
+    if (nrow(allparcombs) == 0) {
+      # no solutions remaining for this group
+      solstats[[cycle]]$knownHap <- knownHap # the original, specified knownhap
+      # we leave solstats[[cycle]]$Pahccols and $solvedFSindiv
+      # unchanged; $pcos should now all be integer(0) for the group FSs
+    } else {
+      # at least one solution for this group, and FSgrpstruct$availFSs
+      # not empty (but perhaps not including all FSs)
+      # keep the combination(s) of parental ahccols that has/have the
+      # highest combinedPval:
+      maxP <- max(combinedPval)
+      bestcomb <- which(combinedPval > 0.99 * maxP) #1% tolerance for rounding errors
+      # Now we first do the things that use all best solutions:
+      # - mark the haplotypes that occur in all solutions of each parent as
+      #   knownHap for this cycle
+      # - mark the hacs of the parent(s) with the same hac over all
+      #   solutions as "known"
+      # - mark all FSs in group as FSfit
+
+      tmpapc <- allparcombs[bestcomb,, drop=FALSE]
+      # limit the solstats[[cycle]]$pcos to those allowed in any
+      # of the bestcomb group solutions:
+      for (fs in FSgrpstruct$availFSs) {
+        p1ahccols <- tmpapc[, colnames(tmpapc)==parents[fs, 1]]
+        p2ahccols <- tmpapc[, colnames(tmpapc)==parents[fs, 2]]
+        pcos <- integer(0)
+        for (i in seq_along(p1ahccols)) {
+          pco <- which(FSdata[[fs]]$parcombok[, 1] == p1ahccols[i] &
+                         FSdata[[fs]]$parcombok[, 2] == p2ahccols[i])
+          if (length(pco) == 1 && !(pco %in% pcos)) {
+            pcos <- c(pcos, pco)
+          }
+        }
+        names(pcos) <- NULL # all added pco have name P1col, confusing
+        # debug check:
+        if (!all(pcos %in% solstats[[cycle]]$pcos[[fs]]))
+          stop("mismatch in pcos")
+        solstats[[cycle]]$pcos[[fs]] <- pcos
+      } # for fs
+
+      parmrkdids <- allmrkdids[match(colnames(tmpapc), names(allmrkdids))]
+      # for each parent we determine the haplotypes common to all selected
+      # solutions and add these to the knownHap for this cycle:
+      for (p in seq_len(ncol(tmpapc))) {
+        phacs <- getAllHapcomb(mrkdid=parmrkdids[p], nmrk=ncol(ihl$allhap),
+                               ahcinfo=ahcinfo)[, tmpapc[, p], drop=FALSE]
+        for (i in seq_len(ncol(phacs))) {
+          if (i == 1) {
+            phaps <- unique(phacs[, 1])
+          } else phaps <- intersect(phaps, phacs[, i])
+        }
+        solstats[[cycle]]$knownHap <-
+          union(solstats[[cycle]]$knownHap, phaps)
+      }
+      solstats[[cycle]]$knownHap <- sort(solstats[[cycle]]$knownHap)
+
+      # for the parents with the same solution (same ahccol in all group
+      # solutions), set that solution in solstats[[cycle]]$Pahscols
+      uniqPar <- which(apply(tmpapc, MARGIN=2, max) ==
+                         apply(tmpapc, MARGIN=2, min) )
+      uniqPar <- colnames(tmpapc)[uniqPar] # names of the parents with a
+      # unique solution
+      for (fs in FSgrpstruct$availFSs) {
+        for (p in 1:2) {
+          up <- which(uniqPar == parents[fs, p])
+          if (length(up) == 1) {
+            solstats[[cycle]]$Pahccols[fs, p] <-
+              tmpapc[1, colnames(tmpapc) == uniqPar[up]]
+          }
+        }
+        # add the number of genotyped FS indivs if this FS has
+        # a unique solution:
+        if (!anyNA(solstats[[cycle]]$Pahccols[fs,])) {
+          solstats[[cycle]]$solvedFSindiv <-
+            solstats[[cycle]]$solvedFSindiv + FSdata[[fs]]$mrksize
+        }
+      }
+      # debug check: the number of rows for the FSs with one single
+      # Pahccol for both parents should be 1:
+      for (fs in FSgrpstruct$availFSs) {
+        if (!anyNA(solstats[[cycle]]$Pahccols[fs,])) {
+          if (length(solstats[[cycle]]$pcos[[fs]]) != 1) {
+            stop("both parents one solution but multiple parcombok rows")
+          }
+        }
+      }
+
+
+      # Next we decide which one (or no) solution to apply
+      selectAmongBest <- 2
+      # selectAmongBest: if there are <= selectAmongBest equally good
+      # solutions we select the first one. If > selectAmongBest we don't
+      # select any (but we already marked these FSs as "fitted" so they
+      # also won't be solved later as unrelated material, which would
+      # be an even worse solution than a random one among the best).
+      #TODO?: we could then still check which solution requires the smallest
+      #number of haplotypes; or we could check for each solution how many of
+      #the "rest" individuals can be assigned and select the maximum.
+      if (length(bestcomb) == 1) {
+        selbestcomb <- bestcomb
+      } else if (length(bestcomb) <= selectAmongBest) {
+        selbestcomb <- bestcomb[1] #so we take the first of a small number
+        # (2) of equally good solutions
+      } else {
+        selbestcomb <- NA # too many equally good solutions, cannot select
+      }
+      # now length(selbestcomb) == 1
+
+      if (is.na(selbestcomb)) {
+        # we can't assign more parental genotypes than those that are the
+        # same in all solutions:
+        solstats[[cycle]]$selPahccols[FSgrpstruct$availFSs,] <-
+          solstats[[cycle]]$Pahccols[FSgrpstruct$availFSs,]
+      } else {
+        # we selected one solution (possible the first among several) and
+        # assign the selPahccol for that solution:
+        # note that we keep all solstats[[cycle]]$pcos[fs], i.e. also
+        # for the non-selected bestcomb solutions
+        tmpapc <- allparcombs[selbestcomb,, drop=FALSE] # 1 row
+        for (fs in FSgrpstruct$availFSs) {
+          for (p in 1:2) {
+            pcol <- which(colnames(tmpapc) == parents[fs, p])
+            #if (!is.na(pcol) && (pcol %in% uniqParAhccol))
+            solstats[[cycle]]$selPahccols[fs, p] <- tmpapc[1, pcol]
+            #debug check: Pahccol should be all equal to selPahccol or NA
+            if (!is.na(solstats[[cycle]]$Pahccol[fs, p]) &&
+                (is.na(solstats[[cycle]]$selPahccol[fs, p]) ||
+                 solstats[[cycle]]$selPahccol[fs, p] !=
+                 solstats[[cycle]]$Pahccol[fs, p]))
+              stop("Pahccol and selPahccol don't match")
+          } # for p
+        } # for fs
+      }
+      for (fs in FSgrpstruct$availFSs) {
+        selpco <-
+          which(FSdata[[fs]]$parcombok[, 1] ==
+                  solstats[[cycle]]$selPahccol[fs, 1] &
+                  FSdata[[fs]]$parcombok[, 2] ==
+                  solstats[[cycle]]$selPahccol[fs, 2])
+        # may be integer(0) if one or both selPahccol[fs,] are NA
+        # debug checkS:
+        if (!(length(selpco) %in% 0:1))
+          stop("selpco incorrect length")
+        if (xor(length(selpco) == 0,
+                anyNA(solstats[[cycle]]$selPahccol[fs,])))
+          stop("selpco and selPahccol don't match NA")
+        if (length(selpco) == 1) {
+          # more debug checks:
+          if (!all(FSdata[[fs]]$parcombok[selpco,] ==
+                   solstats[[cycle]]$selPahccol[fs,]))
+            stop("selpco and selPahccol don't match non-NA")
+          if (!(selpco %in% solstats[[cycle]]$pcos[[fs]]))
+            stop("selpco and pcos don't match")
+          # all ok:
+          solstats[[cycle]]$selpco[fs] <- selpco
+        } else {
+          # length(selpco)==0, no remaining solution for this fs
+          solstats[[cycle]]$selpco[fs] <- NA
+        }
+      } # for fs
+    } # nrow(allparcombs) > 0, at least one group solution
+    list(FSgrpstruct=FSgrpstruct, allparcombs=allparcombs, solstats=solstats)
+  } # resolveGroupConflicts
+
+  imputeFSindiv <- function(mrkDosage, FS, fs, expdid, hac,
+                              allmrkdids, imputedgeno, ahcinfo) {
+    # the specified FS[[fs]] family has only one acceptable
+    # parental hac combination. For partially (SNP-)genotyped
+    # FS individuals where only one possibility exists for the
+    # missing SNPs (given the parental hacs) we infer the missing
+    # SNP dosages. These individuals are are also returned separately
+    # in imputedGeno
+    # export: allmrkdids. imputedGeno
+    NAind <- which(is.na(colSums(mrkDosage)) &
+                     colnames(mrkDosage) %in% FS[[fs]])
+    if (length(NAind) > 0 && length(NAind) < 0.5 * length(FS[[fs]])) {
+      expmrkdos <- mrkdid2mrkdos(dosageIDs=expdid, nmrk=nrow(mrkDosage),
+                                 ploidy=ahcinfo$ploidy)
+      impdids <-
+        matrix(c(NAind, rep(NA, length(NAind))), nrow=2, byrow=TRUE,
+               dimnames=list(c("NAind", "mrkdid"), NULL))
+      for (i in seq_along(NAind)) {
+        nai <- NAind[i]
+        if (!all(is.na(mrkDosage[,nai]))) {
+          md <- 1; matches <- integer(0)
+          while (md <= ncol(expmrkdos) && length(matches) < 2) {
+            if (all(is.na(mrkDosage[,nai]) |
+                    mrkDosage[,nai] == expmrkdos[, md]))
+              matches <- c(matches, md)
+            md <- md + 1
+          }
+          if (length(matches) == 1)
+            impdids[2, i] <- as.integer(colnames(expmrkdos)[matches])
+        }
+      }
+      # impdids (imputed dids) calculated; check if the
+      # segregation still fits parents:
+      impdids <- impdids[, !is.na(impdids[2,]), drop=FALSE]
+      if (ncol(impdids) > 0) {
+        parhac <- hac[, colnames(hac) %in% parents[fs, ], drop=FALSE]
+        # perhaps in reverse order; this doesn't matter
+        # debug check:
+        if (ncol(parhac) != length(unique(parents[fs,])) ||
+            anyNA(parhac)) stop("error in parhac")
+        totFSmrkdids <- c(allmrkdids[names(allmrkdids) %in% FS[[fs]]],
+                          impdids[2,]) # includes NAs
+        newFSdidstable <- table(totFSmrkdids, useNA="no")
+        impstats <-
+          testFSseg(parhac=parhac, DRrate=DRrate, errfrac=errfrac,
+                    FSmrkdidsTable=newFSdidstable, allhap=ihl$allhap)
+        #TODO: remove debug check:
+        # the imputed mrkdids should be among the expected mrkdids, check:
+        if (anyNA(impdids[2,]) || !all(impdids[2,] %in% expdid))
+          stop("error in impdids")
+        if (impstats$stats$P > 0.1 * FSpval[fs]) {
+          # with the extra imputed FS mrkdids the fit of the FS family
+          # is not too much worse, so add the imputed mrkdids
+          allmrkdids[impdids[1,]] <- impdids[2,]
+          # and we include the imputed mrk genotypes as a component
+          # of the return value:
+          FSimpGeno <-
+            mrkdid2mrkdos(dosageIDs=impdids[2,], nmrk=nrow(mrkDosage),
+                          ploidy=ahcinfo$ploidy)
+          rownames(FSimpGeno) <- rownames(mrkDosage)
+          colnames(FSimpGeno) <- colnames(mrkDosage)[impdids[1,]]
+          imputedGeno <- cbind(imputedGeno, FSimpGeno)
+        }
+      }
+    }
+    return(list(allmrkdids=allmrkdids, imputedGeno=imputedGeno))
+  } # imputeFSindiv
+
   # hapOneBlock START ####
   allmrkdids <- mrkdos2mrkdid(mrkDosage, ploidy=ahcinfo$ploidy, check=FALSE)
   if (length(FS) == 0) {
@@ -2767,293 +3162,14 @@ hapOneBlock <- function(mrkDosage, hbname, ahcinfo, parents, FS,
       # for all parents calculate the solution applicable to the smallest
       # total FS progeny and reject that.
       for (grp in seq_along(FSgrouping$FSgroups)) {
-        FSconflicts <- TRUE
-        while (FSconflicts) {
-          FSconflicts <- FALSE
-          FSgrpstruct <-
-            getFSgroupStructure(FSgrouping=FSgrouping, grp=grp, FSdata=FSdata,
-                                pcos=solstats[[cycle]]$pcos, parents=parents)
-          # It is possible that no FSs are left in a group, if none of the FSs
-          # has at least one solution. In that case we skip the rest of the loop
-          # and leave FSconflicts FALSE to exit the loop.
-          if (length(FSgrpstruct$availFSs) > 1) {
-            # find and resolve conflicts between FSs:
-            # where both FS have one or more solutions but the shared parent
-            # cannot have the same hac.
-            # For each parental solution, see for how many total FS progeny (over
-            # multiple FSs) it is acceptable.
-            # Discard the one with the smallest total FS progeny;
-            # check for which FSs this was the only solution for that parent and
-            # remove these FSs from further consideration (i.e. treat as unrelated).
-            # Continue until no further conflicts: all remaining parental solutions
-            # fit all remaining FSs where they are a parent
-            miscount <- vector("list", length(FSgrpstruct$availparents)) # for each
-            #           availparent a vector with for each hac the nr of FS progeny
-            #           it does not match
-            names(miscount) <- FSgrpstruct$availparents
-            for (prow in seq_along(FSgrpstruct$availparents)) {
-              # prow indicates the parent, row number in the FSgrpstruct$FSmatlist's
-              # (and in allparcombs, but that doesn't exist at this stage)
-              miscount[[prow]] <- rep(0, length(FSgrpstruct$parhapcombs[[prow]]))
-              for (cix in seq_along(FSgrpstruct$parhapcombs[[prow]])) {
-                # cix is the index of the current parental ahccol in
-                # FSgrpstruct$parhapcombs[[prow]]
-                phcmb <- FSgrpstruct$parhapcombs[[prow]][cix]
-                # phcmb is the actual parental ahccol indicated by cix
-                # now, for all FSs in grp:
-                for (avfs in seq_along(FSgrpstruct$availFSs)) {
-                  fs <- FSgrpstruct$availFSs[avfs]
-                  if (FSgrpstruct$availparents[prow] %in% parents[fs,]) {
-                    # if the prow parent is a parent of this FS ...
-                    if(!(phcmb %in% FSgrpstruct$FSmatlist[[avfs]][prow,])) {
-                      # ... and this ahccol for this parent is not in one of the
-                      #     solutions of this FS, then this parental solution
-                      #     "misses" all GENOTYPED indivs of the entire FS
-                      miscount[[prow]][cix] <-
-                        miscount[[prow]][cix] + FSdata[[fs]]$mrksize
-                    }
-                  }
-                } # for avfs
-              } # for cix
-            } # for prow
-            #now for each parental combination we know how many fully genotyped
-            # FS progeny it misses
-            #find the (any) maximum:
-            maxmissedprogcount <- sapply(miscount, max)
-            FSconflicts <- any(maxmissedprogcount > 0)
-            if (!FSconflicts) break #ends the "while FSconflicts" loop
-            maxprow <- which.max(maxmissedprogcount) #the parent with the most
-            #                                missed progeny in its worst solution
-            maxcix <- which.max(miscount[[maxprow]]) #the index to the solution itself
-            maxphcmb <- FSgrpstruct$parhapcombs[[maxprow]][maxcix] #the ahccol
-            #now we find in which availFSs this maxhcmb occurs for this parent;
-            #the corresponding column is deleted from the FSmatlist matrices,
-            #and for each FS in which this ahccol is a solution:
-            #the index to the corresponding row in FSdata[[fs]]$parcombok
-            #(and to the corresponding $Pseg) is deleted from
-            #solstats[[cycle]]$pcos[[fs]]
-            for (avfs in seq_along(FSgrpstruct$availFSs)) {
-              cix <- which(FSgrpstruct$FSmatlist[[avfs]][maxprow,] == maxphcmb)
-              if (length(cix) > 0) {
-                # the maxprow parent occurs in this FS and the hapcomb to be deleted
-                # is one of its possibilities in this FS
-                fs <- FSgrpstruct$availFSs[avfs]
-                solstats[[cycle]]$pcos[[fs]] <-
-                  solstats[[cycle]]$pcos[[fs]][-cix]
-              }
-            } # for avfs
-          } else if(length(FSgrpstruct$availFSs) == 1) {
-            # exactly 1 FS in this group, just apply its best solution:
-            fs <- FSgrpstruct$availFSs
-            solstats[[cycle]]$pcos[[fs]] <- which.max(FSdata[[fs]]$Pseg)
-          } else {
-            # length(FSgrpstruct$availFSs) == 0, no FS's left in this group
-            # nothing to do ?
-          }
-        } # while FSconflicts
-        # If there are parents with multiple solutions left (these fit all
-        # remaining FSs of which they are parents, so these FSs also have
-        # multiple solutions):
-        # For each combination of remaining parental solutions over all
-        # remaining parents calculate an overall P-value (by multiplying the
-        # P-values of all remaining FSs for that combination).
-        # (TODO: perhaps use selcrit instead of Pval? Then selcrit must also
-        #        be saved in FSresults)
-        # If any single one of these parental haplotype combinations has the
-        # largest P-value, select that and apply it to all these remaining FSs;
-        # else treat all remaining FSs as unrelated.
-
-        FSgrpstruct <- getFSgroupStructure(FSgrouping, grp, FSdata,
-                                           solstats[[cycle]]$pcos, parents)
-        allparcombs <- getAllParCombs(parents, FSdata, FSgrpstruct)
-        combinedPval <- allparcombs$Pval
-        allparcombs <- allparcombs$allparcombs
-
-        # debug check:
-        if ((length(FSgrpstruct$availFSs) == 0 && nrow(allparcombs) > 0) ||
-            (length(FSgrpstruct$availFSs) > 0 && nrow(allparcombs) == 0))
-          stop("mismatch availFSs and allparcombs")
-        # All FSs in a group that have 0 rows in FSdata[[fs]]$parcombok are not
-        # among the availFSs anymore. This may be because there was no solution
-        # in the first place (conflict parent/offspring, missing data parents,
-        # too many missing data offspring, skipped because of too many parcombs)
-        # or because the solutions all conflicted with other FSs in the group.
-        # These FSs will not be solved but their FSdata$messages must be
-        # filled (if that hasn't been done yet).
-        # If there are FSs left over (still available), allparcombs has 1 valid
-        # combination per row with ahccols of all available parents
-        #
-        # first treat all FSs in grp that are not in availFSs:
-        # (including the case that there are no availFSs left over)
-        for (fs in FSgrouping$FSgroups[[grp]]) {
-          if (!(fs %in% FSgrpstruct$availFSs)) {
-            #check for debugging:
-            #if (nrow(FSsof[[fs]]$parcombok) > 0)
-            if (length(solstats[[cycle]]$pcos[[fs]]) > 0)
-              stop("error: length(pcos) should be 0")
-          }
-        }
-        if (nrow(allparcombs) == 0) {
-          # no solutions remaining for this group
-          solstats[[cycle]]$knownHap <- knownHap # the original, specified knownhap
-          # we leave solstats[[cycle]]$Pahccols and $solvedFSindiv
-          # unchanged; $pcos should now all be integer(0) for the group FSs
-        } else {
-          # at least one solution for this group, and FSgrpstruct$availFSs
-          # not empty (but perhaps not including all FSs)
-          # keep the combination(s) of parental ahccols that has/have the
-          # highest combinedPval:
-          maxP <- max(combinedPval)
-          bestcomb <- which(combinedPval > 0.99 * maxP) #1% tolerance for rounding errors
-          # Now we first do the things that use all best solutions:
-          # - mark the haplotypes that occur in all solutions of each parent as
-          #   knownHap for this cycle
-          # - mark the hacs of the parent(s) with the same hac over all
-          #   solutions as "known"
-          # - mark all FSs in group as FSfit
-
-          tmpapc <- allparcombs[bestcomb,, drop=FALSE]
-          # limit the solstats[[cycle]]$pcos to those allowed in any
-          # of the bestcomb group solutions:
-          for (fs in FSgrpstruct$availFSs) {
-            p1ahccols <- tmpapc[, colnames(tmpapc)==parents[fs, 1]]
-            p2ahccols <- tmpapc[, colnames(tmpapc)==parents[fs, 2]]
-            pcos <- integer(0)
-            for (i in seq_along(p1ahccols)) {
-              pco <- which(FSdata[[fs]]$parcombok[, 1] == p1ahccols[i] &
-                           FSdata[[fs]]$parcombok[, 2] == p2ahccols[i])
-              if (length(pco) == 1 && !(pco %in% pcos)) {
-                pcos <- c(pcos, pco)
-              }
-            }
-            names(pcos) <- NULL # all added pco have name P1col, confusing
-            # debug check:
-            if (!all(pcos %in% solstats[[cycle]]$pcos[[fs]]))
-              stop("mismatch in pcos")
-            solstats[[cycle]]$pcos[[fs]] <- pcos
-          } # for fs
-
-          parmrkdids <- allmrkdids[match(colnames(tmpapc), names(allmrkdids))]
-          # for each parent we determine the haplotypes common to all selected
-          # solutions and add these to the knownHap for this cycle:
-          for (p in seq_len(ncol(tmpapc))) {
-            phacs <- getAllHapcomb(mrkdid=parmrkdids[p], nmrk=ncol(ihl$allhap),
-                                   ahcinfo=ahcinfo)[, tmpapc[, p], drop=FALSE]
-            for (i in seq_len(ncol(phacs))) {
-              if (i == 1) {
-                phaps <- unique(phacs[, 1])
-              } else phaps <- intersect(phaps, phacs[, i])
-            }
-            solstats[[cycle]]$knownHap <-
-              union(solstats[[cycle]]$knownHap, phaps)
-          }
-          solstats[[cycle]]$knownHap <- sort(solstats[[cycle]]$knownHap)
-
-          # for the parents with the same solution (same ahccol in all group
-          # solutions), set that solution in solstats[[cycle]]$Pahscols
-          uniqPar <- which(apply(tmpapc, MARGIN=2, max) ==
-                           apply(tmpapc, MARGIN=2, min) )
-          uniqPar <- colnames(tmpapc)[uniqPar] # names of the parents with a
-          # unique solution
-          for (fs in FSgrpstruct$availFSs) {
-            for (p in 1:2) {
-              up <- which(uniqPar == parents[fs, p])
-              if (length(up) == 1) {
-                solstats[[cycle]]$Pahccols[fs, p] <-
-                  tmpapc[1, colnames(tmpapc) == uniqPar[up]]
-              }
-            }
-            # add the number of genotyped FS indivs if this FS has
-            # a unique solution:
-            if (!anyNA(solstats[[cycle]]$Pahccols[fs,])) {
-              solstats[[cycle]]$solvedFSindiv <-
-                solstats[[cycle]]$solvedFSindiv + FSdata[[fs]]$mrksize
-            }
-          }
-          # debug check: the number of rows for the FSs with one single
-          # Pahccol for both parents should be 1:
-          for (fs in FSgrpstruct$availFSs) {
-            if (!anyNA(solstats[[cycle]]$Pahccols[fs,])) {
-              if (length(solstats[[cycle]]$pcos[[fs]]) != 1) {
-                stop("both parents one solution but multiple parcombok rows")
-              }
-            }
-          }
-
-
-          # Next we decide which one (or no) solution to apply
-          selectAmongBest <- 2
-          # selectAmongBest: if there are <= selectAmongBest equally good
-          # solutions we select the first one. If > selectAmongBest we don't
-          # select any (but we already marked these FSs as "fitted" so they
-          # also won't be solved later as unrelated material, which would
-          # be an even worse solution than a random one among the best).
-          #TODO?: we could then still check which solution requires the smallest
-          #number of haplotypes; or we could check for each solution how many of
-          #the "rest" individuals can be assigned and select the maximum.
-          if (length(bestcomb) == 1) {
-            selbestcomb <- bestcomb
-          } else if (length(bestcomb) <= selectAmongBest) {
-            selbestcomb <- bestcomb[1] #so we take the first of a small number
-            # (2) of equally good solutions
-          } else {
-            selbestcomb <- NA # too many equally good solutions, cannot select
-          }
-          # now length(selbestcomb) == 1
-
-          if (is.na(selbestcomb)) {
-            # we can't assign more parental genotypes than those that are the
-            # same in all solutions:
-            solstats[[cycle]]$selPahccols[FSgrpstruct$availFSs,] <-
-              solstats[[cycle]]$Pahccols[FSgrpstruct$availFSs,]
-          } else {
-            # we selected one solution (possible the first among several) and
-            # assign the selPahccol for that solution:
-            # note that we keep all solstats[[cycle]]$pcos[fs], i.e. also
-            # for the non-selected bestcomb solutions
-            tmpapc <- allparcombs[selbestcomb,, drop=FALSE] # 1 row
-            for (fs in FSgrpstruct$availFSs) {
-              for (p in 1:2) {
-                pcol <- which(colnames(tmpapc) == parents[fs, p])
-                #if (!is.na(pcol) && (pcol %in% uniqParAhccol))
-                solstats[[cycle]]$selPahccols[fs, p] <- tmpapc[1, pcol]
-                #debug check: Pahccol should be all equal to selPahccol or NA
-                if (!is.na(solstats[[cycle]]$Pahccol[fs, p]) &&
-                    (is.na(solstats[[cycle]]$selPahccol[fs, p]) ||
-                     solstats[[cycle]]$selPahccol[fs, p] !=
-                     solstats[[cycle]]$Pahccol[fs, p]))
-                  stop("Pahccol and selPahccol don't match")
-              } # for p
-            } # for fs
-          }
-          for (fs in FSgrpstruct$availFSs) {
-            selpco <-
-              which(FSdata[[fs]]$parcombok[, 1] ==
-                      solstats[[cycle]]$selPahccol[fs, 1] &
-                      FSdata[[fs]]$parcombok[, 2] ==
-                      solstats[[cycle]]$selPahccol[fs, 2])
-            # may be integer(0) if one or both selPahccol[fs,] are NA
-            # debug checkS:
-            if (!(length(selpco) %in% 0:1))
-              stop("selpco incorrect length")
-            if (xor(length(selpco) == 0,
-                    anyNA(solstats[[cycle]]$selPahccol[fs,])))
-              stop("selpco and selPahccol don't match NA")
-            if (length(selpco) == 1) {
-              # more debug checks:
-              if (!all(FSdata[[fs]]$parcombok[selpco,] ==
-                       solstats[[cycle]]$selPahccol[fs,]))
-                stop("selpco and selPahccol don't match non-NA")
-              if (!(selpco %in% solstats[[cycle]]$pcos[[fs]]))
-                stop("selpco and pcos don't match")
-              # all ok:
-              solstats[[cycle]]$selpco[fs] <- selpco
-            } else {
-              # length(selpco)==0, no remaining solution for this fs
-              solstats[[cycle]]$selpco[fs] <- NA
-            }
-          } # for fs
-        } # nrow(allparcombs) > 0, at least one group solution
+        rgc <- resolveGroupConflicts(FSgroup=grp, FSgrpstruct=FSgrpstruct,
+                              FSgrouping=FSgrouping, FSdata=FSdata,
+                              parents=parents, solstats=solstats, cycle=cycle,
+                              ihl=ihl)
+        FSgrpstruct <- rgc$FSgrpstruct
+        allparcombs <- rgc$allparcombs
+        solstats <- rgc$solstats
+        rm(rgc)
       } # for grp
     } # while(cycle)
 
@@ -3128,6 +3244,7 @@ hapOneBlock <- function(mrkDosage, hbname, ahcinfo, parents, FS,
         # over all (1 or more) possible parental combinations:
         if (!is.na(solstats[[bestcycle]]$selpco[fs]))
           pcorows <- solstats[[bestcycle]]$selpco[fs]
+        # else (is.na(selpco)): keep on using all pcorows)
         unexp_dids <- integer(0)
         multisol_dids <- integer(0)
         for (pcor in seq_along(pcorows)) {
@@ -3172,66 +3289,17 @@ hapOneBlock <- function(mrkDosage, hbname, ahcinfo, parents, FS,
                          ", n=", sum_multisol_dids)
               }
               # length(pcorows)==1, so a unique parental combination
-              # we can check if there are partially genotyped FS individuals
-              # that can have only one expected mrkdid; these can be imputed,
-              # and if the mrkdid has only one allowed hac it can also be
-              # haplotyped
-              NAind <- which(is.na(colSums(mrkDosage)) &
-                               colnames(mrkDosage) %in% FS[[fs]])
-              if (length(NAind) > 0 && length(NAind) < 0.5 * length(FS[[fs]])) {
-                expmrkdos <- mrkdid2mrkdos(dosageIDs=expdid, nmrk=nrow(mrkDosage),
-                                           ploidy=ahcinfo$ploidy)
-                impdids <-
-                  matrix(c(NAind, rep(NA, length(NAind))), nrow=2, byrow=TRUE,
-                         dimnames=list(c("NAind", "mrkdid"), NULL))
-                for (i in seq_along(NAind)) {
-                  nai <- NAind[i]
-                  if (!all(is.na(mrkDosage[,nai]))) {
-                    md <- 1; matches <- integer(0)
-                    while (md <= ncol(expmrkdos) && length(matches) < 2) {
-                      if (all(is.na(mrkDosage[,nai]) |
-                              mrkDosage[,nai] == expmrkdos[, md]))
-                        matches <- c(matches, md)
-                      md <- md + 1
-                    }
-                    if (length(matches) == 1)
-                      impdids[2, i] <- as.integer(colnames(expmrkdos)[matches])
-                  }
-                }
-                # impdids (imputed dids) calculated; check if the
-                # segregation still fits parents:
-                impdids <- impdids[, !is.na(impdids[2,]), drop=FALSE]
-                if (ncol(impdids) > 0) {
-                  parhac <- hac[, colnames(hac) %in% parents[fs, ], drop=FALSE]
-                  # perhaps in reverse order; this doesn't matter
-                  # debug check:
-                  if (ncol(parhac) != length(unique(parents[fs,])) ||
-                      anyNA(parhac)) stop("error in parhac")
-                  totFSmrkdids <- c(allmrkdids[names(allmrkdids) %in% FS[[fs]]],
-                                    impdids[2,]) # includes NAs
-                  newFSdidstable <- table(totFSmrkdids, useNA="no")
-                  impstats <-
-                    testFSseg(parhac=parhac, DRrate=DRrate, errfrac=errfrac,
-                               FSmrkdidsTable=newFSdidstable, allhap=ihl$allhap)
-                  #TODO: remove debug check:
-                  # the imputed mrkdids should be among the expected mrkdids, check:
-                  if (anyNA(impdids[2,]) || !all(impdids[2,] %in% expdid))
-                    stop("error in impdids")
-                  if (impstats$stats$P > 0.1 * FSpval[fs]) {
-                    # with the extra imputed FS mrkdids the fit of the FS family
-                    # is not too much worse, so add the imputed mrkdids
-                    allmrkdids[impdids[1,]] <- impdids[2,]
-                    # and we include the imputed mrk genotypes as a component
-                    # of the return value:
-                    FSimpGeno <-
-                      mrkdid2mrkdos(dosageIDs=impdids[2,], nmrk=nrow(mrkDosage),
-                                    ploidy=ahcinfo$ploidy)
-                    rownames(FSimpGeno) <- rownames(mrkDosage)
-                    colnames(FSimpGeno) <- colnames(mrkDosage)[impdids[1,]]
-                    imputedGeno <- cbind(imputedGeno, FSimpGeno)
-                  }
-                }
-              }
+              # we check if there are partially genotyped FS individuals
+              # that can have only one expected mrkdid; these can be imputed.
+              # (and later they will then also be haplotyped, if the imputed
+              # mrkdid has only one allowed hac)
+              impfs <- imputeFSindiv(mrkDosage=mrkDosage, FS=FS, fs=fs,
+                                     expdid=expdid, hac=hac,
+                                     allmrkdids=allmrkdids,
+                                     imputedgeno=imputedGeno, ahcinfo=ahcinfo)
+              allmrkdids <- impfs$allmrkdids
+              imputedGeno <- impfs$imputedGeno
+              rm(impfs)
             } # if (length(pcorows) == 1)
             mdhacs <- mdhacs[, !is.na(mdhacs[1,]), drop=FALSE]
             # end of pcor == 1
@@ -3354,7 +3422,7 @@ hapOneBlock <- function(mrkDosage, hbname, ahcinfo, parents, FS,
           #one of the parents in rest (and we know it has a non-missing hac)
           if (parents[fs, 1] %in% rest) p <- 1 else p <- 2
           # p is the "rest" parent, 3-p the non-rest; we test only p separately
-          if (is.na(hac[1, parents[3-p]])) {
+          if (is.na(hac[1, parents[fs, 3-p]])) {
             # the non-rest parent has missing hac
             chk <- checkFS_OneParent(pargamlist[[p]], FShac=FShac, nhap=nhap)
             if (nrow(chk) != 1) stop("error")
@@ -3559,7 +3627,8 @@ addNewMrkdids <- function(newMrkdids, ahcinfo, progress) {
           calcAllhapcomb4mrkdid(mrkdid=did, ploidy=ahcinfo$ploidy, allhap=allhap)
         # save after every 500 mrkdids so we can resume after crash:
         if (i %% 500 == 0) {
-          save(ahcinfo$ahclist,
+          ahclist <- ahcinfo$ahclist # because save will only save an entire R object, not a list element
+          save(ahclist,
                file=paste0(ahcinfo$ahcdir, "ahclist_", ahcinfo$ploidy, "x.RData"),
                version=2)
         }
@@ -3608,9 +3677,9 @@ addNewMrkdids <- function(newMrkdids, ahcinfo, progress) {
 #'minfrac[1] of all individuals; in the final stage for the "other"
 #'individuals (those that do not belong to the FS or its parents) this fraction
 #'is lowered to minfrac[2]; see also inferHaps_noFS
-#'@param errfrac the assumed fraction marker genotypes with an error (over all
-#'markers in the haploblock). The errors are assumed to be uniformly distributed
-#'over all except the original marker dosage combinations (mrkdids)
+#'@param errfrac default 0.025. The assumed fraction marker genotypes with an error
+#'(over all markers in the haploblock). The errors are assumed to be uniformly
+#'distributed over all except the original marker dosage combinations (mrkdids)
 #'@param DRrate default 0.025. The rate of double reduction per meiosis (NOT
 #'per allele!); e.g. with a DRrate of 0.04, a tetraploid parent with
 #'genotype ABCD will produce a fraction of 0.04 of DR gametes AA, BB, CC and DD
@@ -3627,9 +3696,9 @@ addNewMrkdids <- function(newMrkdids, ahcinfo, progress) {
 #'This may take a long time if many such combinations need to be checked.
 #'This parameter sets a limit to the number of allowed combinations per
 #'haploblock; default 150000 takes about 45 min.
-#'@param minPseg The minimum P-value of a chisquared test for segregation in
-#'FS families. The best solution for an FS family is selected based on a
-#'combination of P-value and number of required haplotypes, among all
+#'@param minPseg default 1e-8. The minimum P-value of a chisquared test for
+#'segregation in FS families. The best solution for an FS family is selected
+#'based on a combination of P-value and number of required haplotypes, among all
 #'candidate solutions with a P-value of at least minPseg. If no such solution
 #'is found the FS and its parents are treated as unrelated material
 #'@param knownHap integer vector with haplotype numbers (haplotypes that must be
@@ -5760,6 +5829,7 @@ compareHapMrkDosages <- function(mrkDosage, hapresults) {
 #'individual\cr
 #'$markers:  a vector with the names of
 #'the markers in the haploblock in the output of inferHaplotypes
+#'@export
 pedigreeSim2PH <- function(ps_geno, haploblock, indiv=NULL, dropUnused=TRUE) {
   if (is.character(ps_geno))
     ps_geno <- read.table(ps_geno[1], header=TRUE, sep="\t",
